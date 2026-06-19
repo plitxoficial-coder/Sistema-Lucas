@@ -36,6 +36,20 @@ export const db = {
       body: JSON.stringify({ count, last_day: lastDay }),
     });
   },
+  async getAppCount() {
+    try {
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/streak?id=eq.1&select=app_count`, { headers });
+      const data = await r.json();
+      return data.length > 0 ? (data[0].app_count || 0) : 0;
+    } catch { return 0; }
+  },
+  async setAppCount(count) {
+    await fetch(`${SUPABASE_URL}/rest/v1/streak?id=eq.1`, {
+      method: "PATCH",
+      headers,
+      body: JSON.stringify({ app_count: count }),
+    });
+  },
   async getMonth(year, month) {
     try {
       const prefix = `${year}-${String(month + 1).padStart(2, "0")}`;
