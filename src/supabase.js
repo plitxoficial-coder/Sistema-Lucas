@@ -50,6 +50,34 @@ export const db = {
       body: JSON.stringify({ app_count: count }),
     });
   },
+  async getFocus(day) {
+    try {
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/habit_logs?day=eq.${day}&select=focus`, { headers });
+      const data = await r.json();
+      return data.length > 0 ? (data[0].focus || "") : "";
+    } catch { return ""; }
+  },
+  async setFocus(day, focus) {
+    await fetch(`${SUPABASE_URL}/rest/v1/habit_logs`, {
+      method: "POST",
+      headers: { ...headers, "Prefer": "resolution=merge-duplicates,return=minimal" },
+      body: JSON.stringify({ day, focus, updated_at: new Date().toISOString() }),
+    });
+  },
+  async getNotes(day) {
+    try {
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/habit_logs?day=eq.${day}&select=notes`, { headers });
+      const data = await r.json();
+      return data.length > 0 ? (data[0].notes || { cuerpo: "", mente: "", negocios: "" }) : { cuerpo: "", mente: "", negocios: "" };
+    } catch { return { cuerpo: "", mente: "", negocios: "" }; }
+  },
+  async setNotes(day, notes) {
+    await fetch(`${SUPABASE_URL}/rest/v1/habit_logs`, {
+      method: "POST",
+      headers: { ...headers, "Prefer": "resolution=merge-duplicates,return=minimal" },
+      body: JSON.stringify({ day, notes, updated_at: new Date().toISOString() }),
+    });
+  },
   async getMonth(year, month) {
     try {
       const prefix = `${year}-${String(month + 1).padStart(2, "0")}`;
