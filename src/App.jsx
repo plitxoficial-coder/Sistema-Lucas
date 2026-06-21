@@ -2,9 +2,9 @@ import { useState, useEffect, useRef } from "react";
 import { db } from "./supabase.js";
 
 const BLOCKS = {
-  cuerpo:   { label: "Cuerpo",    icon: "🏋️", color: "#f76a6a", bg: "#2e1a1a" },
-  mente:    { label: "Mente",     icon: "🧠", color: "#f7b84a", bg: "#2e2210" },
-  negocios: { label: "Negocios",  icon: "💼", color: "#4a9eff", bg: "#1a2535" },
+  cuerpo:   { label: "Cuerpo",   icon: "🏋️", color: "#f76a6a", bg: "#2e1a1a" },
+  mente:    { label: "Mente",    icon: "🧠", color: "#f7b84a", bg: "#2e2210" },
+  negocios: { label: "Negocios", icon: "💼", color: "#4a9eff", bg: "#1a2535" },
 };
 
 const HABITS = [
@@ -88,6 +88,15 @@ export default function App() {
   const [tip,          setTip]          = useState(null);
   const [saving,       setSaving]       = useState(false);
   const [saved,        setSaved]        = useState(false);
+  const [focusTask,    setFocusTask]    = useState("");
+  const [focusInput,   setFocusInput]   = useState("");
+  const [editingFocus, setEditingFocus] = useState(false);
+  const [notes,        setNotes]        = useState({ cuerpo: "", mente: "", negocios: "" });
+  const [editingNote,  setEditingNote]  = useState(null);
+  const [noteInput,    setNoteInput]    = useState("");
+  const [aiReport,     setAiReport]     = useState("");
+  const [aiLoading,    setAiLoading]    = useState(false);
+  const [weekData,     setWeekData]     = useState({});
   const [viewYear,     setViewYear]     = useState(now.getFullYear());
   const [viewMonth,    setViewMonth]    = useState(now.getMonth());
   const [monthData,    setMonthData]    = useState({});
@@ -98,14 +107,15 @@ export default function App() {
 
   useEffect(() => {
     (async () => {
-      const [day, str, apps] = await Promise.all([
-        db.getDay(todayKey()),
-        db.getStreak(),
-        db.getAppCount(),
+      const tk = todayKey();
+      const [day, str, apps, focus, notesData] = await Promise.all([
+        db.getDay(tk), db.getStreak(), db.getAppCount(), db.getFocus(tk), db.getNotes(tk),
       ]);
       setChecked(day || {});
       setStreak(str);
       setAppCount(apps || 0);
+      setFocusTask(focus || "");
+      setNotes(notesData || { cuerpo: "", mente: "", negocios: "" });
       setReady(true);
     })();
   }, []);
@@ -121,6 +131,20 @@ export default function App() {
       setMonthLoading(false);
     })();
   }, [tab, viewYear, viewMonth, ready]);
+
+  useEffect(() => {
+    if (tab !== "ia") return;
+    (async () => {
+      const obj = {};
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(); d.setDate(d.getDate() - i);
+        const k = toKey(d);
+        const data = await db.getDay(k);
+        if (data) obj[k] = data;
+      }
+      setWeekData(obj);
+    })();
+  }, [tab]);
 
   const toggle = async (id) => {
     const next = { ...checked, [id]: !checked[id] };
@@ -142,10 +166,77 @@ export default function App() {
     setTimeout(() => setSaved(false), 1500);
   };
 
+  const saveFocus = async () => {
+    setFocusTask(focusInput);
+    setEditingFocus(false);
+    await db.setFocus(todayKey(), focusInput);
+  };
+
+  const saveNote = async (block) => {
+    const next = { ...notes, [block]: noteInput };
+    setNotes(next);
+    setEditingNote(null);
+    await db.setNotes(todayKey(), next);
+  };
+
   const addApplication = async () => {
     const next = appCount + 1;
     setAppCount(next);
     await db.setAppCount(next);
+  };
+
+  const generateAiReport = async () => {
+    setAiLoading(true);
+    setAiReport("");
+    const weekSummary = Object.entries(weekData).map(([date, data]) => {
+      const done = HABITS.filter(h => data[h.id]).length;
+      const pct  = Math.round((done / HABITS.length) * 100);
+      const byBlock = Object.keys(BLOCKS).map(b => {
+        const bh = HABITS.filter(h => h.block === b);
+        const bd = bh.filter(h => data[h.id]).length;
+        return `${BLOCKS[b].label}: ${bd}/${bh.length}`;
+      }).join(", ");
+      return `${date}: ${pct}% (${byBlock})`;
+    }).join("\n");
+
+    const prompt = `Sos un coach de alto rendimiento analizando el progreso semanal de Lucas, 25 años, con estos objetivos:
+- Conseguir un rol remoto como Process Automation Specialist antes de enero 2027
+- Construir un MVP de Fleet SaaS con n8n y Supabase
+- Mudarse a Fortaleza, Brasil en enero 2027
+- Entrenar consistentemente, comer bien, estudiar portugués e inglés 30 min diarios, leer
+
+Sistema con 3 bloques: Cuerpo (salud/nutrición), Mente (idiomas/lectura), Negocios (aplicaciones laborales/SaaS).
+Aplicaciones enviadas hasta ahora: ${appCount}
+Racha actual: ${streak.count} días
+
+Datos de los últimos 7 días:
+${weekSummary || "Sin datos suficientes aún"}
+
+Respondé en español con:
+1. **Qué funcionó** (máximo 2 puntos concretos)
+2. **Qué falló o está en riesgo** (máximo 2 puntos concretos)
+3. **3 acciones concretas para esta semana** (específicas y ejecutables)
+4. **Un mensaje directo** de 1 sola línea que impacte
+
+Sé directo, específico y sin motivación genérica. Usá los datos reales.`;
+
+    try {
+      const response = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "claude-sonnet-4-6",
+          max_tokens: 1000,
+          messages: [{ role: "user", content: prompt }],
+        }),
+      });
+      const data = await response.json();
+      const text = data.content?.map(c => c.text || "").join("") || "Error al generar el análisis.";
+      setAiReport(text);
+    } catch {
+      setAiReport("Error de conexión. Intentá de nuevo.");
+    }
+    setAiLoading(false);
   };
 
   const doneCount = HABITS.filter(h => checked[h.id]).length;
@@ -187,6 +278,7 @@ export default function App() {
   );
 
   const stats = tab === "mes" ? monthStats() : null;
+  const TABS = ["hoy", "metas", "mes", "progreso", "ia"];
 
   return (
     <div style={{ minHeight: "100vh", background: BG, color: "#e8e8f0", fontFamily: "'Inter', system-ui, sans-serif", paddingBottom: 48 }}>
@@ -208,11 +300,35 @@ export default function App() {
             </div>
           </div>
 
-          <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
+          {(focusTask || editingFocus) && (
+            <div style={{ background: "#1a1a2e", border: "1px solid #7c6af755", borderRadius: 10, padding: "10px 12px", marginBottom: 10 }}>
+              <div style={{ fontSize: 9, color: "#7c6af7", fontWeight: 800, textTransform: "uppercase", letterSpacing: 1, marginBottom: 4 }}>🎯 Foco del día</div>
+              {editingFocus ? (
+                <div style={{ display: "flex", gap: 8 }}>
+                  <input value={focusInput} onChange={e => setFocusInput(e.target.value)}
+                    placeholder="Tu tarea más importante hoy..."
+                    style={{ flex: 1, background: "#0d0d14", border: "1px solid #7c6af7", borderRadius: 6, padding: "6px 10px", color: "#e8e8f0", fontSize: 12, outline: "none" }} />
+                  <button onClick={saveFocus} style={{ background: "#7c6af7", border: "none", color: "#fff", borderRadius: 6, padding: "6px 12px", cursor: "pointer", fontSize: 12, fontWeight: 700 }}>OK</button>
+                </div>
+              ) : (
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: "#e8e8f0" }}>{focusTask}</div>
+                  <button onClick={() => { setFocusInput(focusTask); setEditingFocus(true); }} style={{ background: "none", border: "none", color: "#555", fontSize: 11, cursor: "pointer" }}>editar</button>
+                </div>
+              )}
+            </div>
+          )}
+          {!focusTask && !editingFocus && (
+            <button onClick={() => { setFocusInput(""); setEditingFocus(true); }} style={{ width: "100%", background: "#1a1a2e", border: "1px dashed #7c6af755", borderRadius: 10, padding: "10px 12px", color: "#555", fontSize: 12, cursor: "pointer", textAlign: "left", marginBottom: 10 }}>
+              🎯 ¿Cuál es tu foco del día?
+            </button>
+          )}
+
+          <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
             {Object.keys(BLOCKS).map(b => <BlockProgress key={b} block={b} checked={checked} />)}
           </div>
 
-          <div style={{ marginBottom: 8 }}>
+          <div style={{ marginBottom: 6 }}>
             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
               <span style={{ fontSize: 10, color: "#555" }}>Total: {doneCount}/{HABITS.length}</span>
               <span style={{ fontSize: 10, fontWeight: 800, color: pct === 100 ? "#4caf75" : "#7c6af7" }}>{pct}%</span>
@@ -220,7 +336,7 @@ export default function App() {
             <ProgressBar pct={pct} color="#7c6af7" height={3} />
           </div>
 
-          <div style={{ padding: "8px 0 12px", fontSize: 10, color: "#555", fontStyle: "italic", borderTop: "1px solid " + BORDER, marginTop: 8 }}>"{quote}"</div>
+          <div style={{ padding: "8px 0 10px", fontSize: 10, color: "#555", fontStyle: "italic", borderTop: "1px solid " + BORDER, marginTop: 8 }}>"{quote}"</div>
 
           <div style={{ height: 14, display: "flex", alignItems: "center", justifyContent: "flex-end" }}>
             {saving && <span style={{ fontSize: 10, color: "#555" }}>guardando...</span>}
@@ -228,14 +344,14 @@ export default function App() {
           </div>
 
           <div style={{ display: "flex", gap: 2 }}>
-            {["hoy", "metas", "mes", "progreso"].map(t => (
+            {TABS.map(t => (
               <button key={t} onClick={() => setTab(t)} style={{
-                flex: 1, padding: "8px 0",
+                flex: 1, padding: "7px 0",
                 background: tab === t ? "#7c6af7" : "transparent",
-                color: tab === t ? "#fff" : "#555",
+                color: tab === t ? "#fff" : t === "ia" ? "#a78bfa" : "#555",
                 border: "none", borderRadius: "8px 8px 0 0",
-                fontSize: 11, fontWeight: 700, cursor: "pointer", textTransform: "uppercase", letterSpacing: 1,
-              }}>{t}</button>
+                fontSize: t === "ia" ? 13 : 10, fontWeight: 700, cursor: "pointer", textTransform: "uppercase", letterSpacing: 0.5,
+              }}>{t === "ia" ? "🤖" : t}</button>
             ))}
           </div>
         </div>
@@ -272,7 +388,7 @@ export default function App() {
                       </div>
                       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                         <div style={{ fontSize: 28, fontWeight: 900, color: "#4a9eff" }}>{appCount}</div>
-                        <button onClick={addApplication} style={{ background: "#4a9eff", border: "none", color: "#fff", borderRadius: 8, padding: "6px 12px", fontSize: 18, cursor: "pointer", fontWeight: 900, lineHeight: 1 }}>+</button>
+                        <button onClick={addApplication} style={{ background: "#4a9eff", border: "none", color: "#fff", borderRadius: 8, padding: "6px 12px", fontSize: 18, cursor: "pointer", fontWeight: 900 }}>+</button>
                       </div>
                     </div>
                   )}
@@ -301,6 +417,22 @@ export default function App() {
                         </div>
                       );
                     })}
+                  </div>
+                  <div style={{ marginTop: 8 }}>
+                    {editingNote === blockKey ? (
+                      <div style={{ display: "flex", gap: 8 }}>
+                        <input value={noteInput} onChange={e => setNoteInput(e.target.value)}
+                          placeholder={`Nota de ${blockData.label.toLowerCase()}...`}
+                          style={{ flex: 1, background: CARD, border: `1px solid ${blockData.color}55`, borderRadius: 8, padding: "8px 10px", color: "#e8e8f0", fontSize: 12, outline: "none" }} />
+                        <button onClick={() => saveNote(blockKey)} style={{ background: blockData.color, border: "none", color: "#fff", borderRadius: 8, padding: "8px 12px", cursor: "pointer", fontSize: 12, fontWeight: 700 }}>OK</button>
+                        <button onClick={() => setEditingNote(null)} style={{ background: "#2a2a40", border: "none", color: "#888", borderRadius: 8, padding: "8px 10px", cursor: "pointer", fontSize: 12 }}>✕</button>
+                      </div>
+                    ) : (
+                      <button onClick={() => { setNoteInput(notes[blockKey] || ""); setEditingNote(blockKey); }}
+                        style={{ width: "100%", background: notes[blockKey] ? blockData.bg : "transparent", border: `1px dashed ${blockData.color}40`, borderRadius: 8, padding: "8px 12px", color: notes[blockKey] ? "#ccc" : "#444", fontSize: 11, cursor: "pointer", textAlign: "left" }}>
+                        {notes[blockKey] ? `📝 ${notes[blockKey]}` : `+ Nota de ${blockData.label.toLowerCase()}`}
+                      </button>
+                    )}
                   </div>
                 </div>
               );
@@ -413,6 +545,38 @@ export default function App() {
                 </div>
               );
             })}
+          </div>
+        )}
+
+        {tab === "ia" && (
+          <div>
+            <div style={{ fontSize: 10, color: "#a78bfa", fontWeight: 800, letterSpacing: 2, textTransform: "uppercase", marginBottom: 4 }}>🤖 Análisis semanal con IA</div>
+            <div style={{ fontSize: 11, color: "#555", marginBottom: 16, lineHeight: 1.6 }}>
+              Basado en tus últimos 7 días reales — hábitos completados, racha y aplicaciones enviadas.
+            </div>
+            {!aiReport && !aiLoading && (
+              <button onClick={generateAiReport} style={{ width: "100%", background: "linear-gradient(135deg, #2d1f5e, #1a1a35)", border: "1px solid #7c6af7", borderRadius: 14, padding: "20px 16px", color: "#e8e8f0", cursor: "pointer", textAlign: "center" }}>
+                <div style={{ fontSize: 32, marginBottom: 8 }}>🤖</div>
+                <div style={{ fontSize: 15, fontWeight: 800, color: "#a78bfa", marginBottom: 4 }}>Generar análisis</div>
+                <div style={{ fontSize: 11, color: "#666" }}>Claude analiza tu semana y te da 3 acciones concretas</div>
+              </button>
+            )}
+            {aiLoading && (
+              <div style={{ background: CARD, border: "1px solid #7c6af755", borderRadius: 14, padding: 24, textAlign: "center" }}>
+                <div style={{ fontSize: 28, marginBottom: 8 }}>⚡</div>
+                <div style={{ fontSize: 13, color: "#a78bfa" }}>Analizando tu semana...</div>
+              </div>
+            )}
+            {aiReport && !aiLoading && (
+              <div>
+                <div style={{ background: CARD, border: "1px solid #7c6af755", borderRadius: 14, padding: 16, marginBottom: 12, lineHeight: 1.7, fontSize: 13, color: "#ccc", whiteSpace: "pre-wrap" }}>
+                  {aiReport}
+                </div>
+                <button onClick={() => setAiReport("")} style={{ width: "100%", background: "transparent", border: "1px solid #333", borderRadius: 10, padding: "10px", color: "#555", fontSize: 12, cursor: "pointer" }}>
+                  Regenerar análisis
+                </button>
+              </div>
+            )}
           </div>
         )}
 
