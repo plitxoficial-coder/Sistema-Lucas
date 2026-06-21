@@ -23,19 +23,19 @@ const HABITS = [
   { id: "ingles",    time: "09:00", icon: "🇬🇧", label: "Inglés (30 min)",     block: "mente",    tip: "El inglés B2 te abre roles remotos internacionales. Cada sesión cuenta." },
   { id: "lectura",   time: "21:00", icon: "📚", label: "Lectura",               block: "mente",    tip: "Los CEOs leen en promedio 52 libros al año. 20 páginas por día = 12 libros." },
   { id: "job1",      time: "10:00", icon: "📨", label: "Aplicar a 3 roles",     block: "negocios", tip: "Volumen + calidad. 3 aplicaciones bien dirigidas valen más que 10 genéricas." },
-  { id: "saas1",     time: "10:30", icon: "🚛", label: "1 hora Fleet SaaS",     block: "negocios", tip: "Una hora por día sostenida en el tiempo construye el MVP en 30 días." },
+  { id: "zentrai",   time: "10:30", icon: "⚡", label: "1 hora Zentrai",        block: "negocios", tip: "Outreach, propuesta o seguimiento. Un contacto por día construye el primer cliente." },
   { id: "review",    time: "21:15", icon: "📋", label: "Revisión del día",       block: "negocios", tip: "5 minutos de revisión diaria evitan semanas perdidas. ¿Qué moviste hoy?" },
 ];
 
 const GOALS = [
-  { id: "g1", icon: "💪", label: "Entrenamiento consistente", sub: "Sin saltear días",                        block: "cuerpo" },
-  { id: "g2", icon: "🥩", label: "Nutrición controlada",      sub: "Comer bien todos los días",               block: "cuerpo" },
-  { id: "g3", icon: "🇧🇷", label: "Portugués fluido",         sub: "30 min diarios hasta enero",              block: "mente" },
-  { id: "g4", icon: "🇬🇧", label: "Inglés B2",                sub: "Objetivo: roles remotos internacionales", block: "mente" },
-  { id: "g5", icon: "📚", label: "Leer 12 libros",            sub: "20 páginas por día",                      block: "mente" },
-  { id: "g6", icon: "💼", label: "Rol remoto",                sub: "Process Automation Specialist — antes de enero", block: "negocios" },
-  { id: "g7", icon: "🚛", label: "MVP Fleet SaaS",            sub: "n8n + Supabase — cliente cero confirmado",block: "negocios" },
-  { id: "g8", icon: "🇧🇷", label: "Mudanza a Fortaleza",      sub: "Enero 2027",                              block: "negocios" },
+  { id: "g1", icon: "💪", label: "Entrenamiento consistente", sub: "Sin saltear días",                              block: "cuerpo" },
+  { id: "g2", icon: "🥩", label: "Nutrición controlada",      sub: "Comer bien todos los días",                     block: "cuerpo" },
+  { id: "g3", icon: "🇧🇷", label: "Portugués fluido",         sub: "30 min diarios hasta enero",                    block: "mente" },
+  { id: "g4", icon: "🇬🇧", label: "Inglés B2",                sub: "Objetivo: roles remotos internacionales",       block: "mente" },
+  { id: "g5", icon: "📚", label: "Leer 12 libros",            sub: "20 páginas por día",                            block: "mente" },
+  { id: "g6", icon: "💼", label: "Rol remoto",                sub: "Process Automation Specialist — antes de enero",block: "negocios" },
+  { id: "g7", icon: "⚡", label: "Zentrai — primer cliente",  sub: "Servicio de automatización de operaciones",     block: "negocios" },
+  { id: "g8", icon: "🇧🇷", label: "Mudanza a Fortaleza",      sub: "Enero 2027",                                    block: "negocios" },
 ];
 
 const QUOTES = [
@@ -47,6 +47,7 @@ const QUOTES = [
   "Consistencia > intensidad. Siempre.",
   "Lo que hacés cuando nadie mira define quién sos.",
   "Hoy es otro ladrillo. La pared ya se ve.",
+  "Zentrai empieza con un solo cliente. Ese cliente empieza hoy.",
 ];
 
 const MONTH_NAMES = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
@@ -287,13 +288,13 @@ export default function App() {
     }).join("\n");
 
     const prompt = `Sos un coach de alto rendimiento analizando el progreso semanal de Lucas, 25 años, con estos objetivos:
+- Lanzar Zentrai: servicio productizado de automatización de operaciones para empresas de transporte en Latinoamérica. Ya construyó el sistema internamente (n8n + Supabase + WhatsApp). El foco ahora es conseguir el primer cliente pagando.
 - Conseguir un rol remoto como Process Automation Specialist antes de enero 2027
-- Construir un MVP de Fleet SaaS con n8n y Supabase
 - Mudarse a Fortaleza, Brasil en enero 2027
 - Entrenar consistentemente, comer bien, estudiar portugués e inglés 30 min diarios, leer
 
-Sistema con 3 bloques: Cuerpo (salud/nutrición), Mente (idiomas/lectura), Negocios (aplicaciones laborales/SaaS).
-Aplicaciones enviadas hasta ahora: ${appCount}
+Sistema con 3 bloques: Cuerpo (salud/nutrición), Mente (idiomas/lectura), Negocios (Zentrai outreach + aplicaciones laborales).
+Aplicaciones laborales enviadas: ${appCount}
 Racha actual: ${streak.count} días
 
 Datos de los últimos 7 días:
@@ -676,7 +677,7 @@ Sé directo, específico y sin motivación genérica. Usá los datos reales.`;
           <div>
             <div style={{ fontSize: 10, color: "#a78bfa", fontWeight: 800, letterSpacing: 2, textTransform: "uppercase", marginBottom: 4 }}>🤖 Análisis semanal con IA</div>
             <div style={{ fontSize: 11, color: "#555", marginBottom: 16, lineHeight: 1.6 }}>
-              Basado en tus últimos 7 días reales — hábitos completados, racha y aplicaciones enviadas.
+              Basado en tus últimos 7 días reales — hábitos, racha, aplicaciones y Zentrai.
             </div>
             {!aiReport && !aiLoading && (
               <button onClick={generateAiReport} style={{ width: "100%", background: "linear-gradient(135deg, #2d1f5e, #1a1a35)", border: "1px solid #7c6af7", borderRadius: 14, padding: "20px 16px", color: "#e8e8f0", cursor: "pointer", textAlign: "center" }}>
