@@ -88,4 +88,43 @@ export const db = {
       return obj;
     } catch { return {}; }
   },
+  async getTransactions(monthKey) {
+    try {
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/transactions?date=eq.${monthKey}&select=*&order=created_at.desc`, { headers });
+      return await r.json();
+    } catch { return []; }
+  },
+  async addTransaction(tx) {
+    try {
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/transactions`, {
+        method: "POST",
+        headers: { ...headers, "Prefer": "return=representation" },
+        body: JSON.stringify(tx),
+      });
+      const data = await r.json();
+      return data[0] || null;
+    } catch { return null; }
+  },
+  async deleteTransaction(id) {
+    try {
+      await fetch(`${SUPABASE_URL}/rest/v1/transactions?id=eq.${id}`, {
+        method: "DELETE",
+        headers,
+      });
+    } catch {}
+  },
+  async getFinanceSettings() {
+    try {
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/finance_settings?id=eq.1&select=*`, { headers });
+      const data = await r.json();
+      return data.length > 0 ? data[0] : { usd_goal: 3000, usd_saved: 0, exchange_rate: 1000 };
+    } catch { return { usd_goal: 3000, usd_saved: 0, exchange_rate: 1000 }; }
+  },
+  async setFinanceSettings(cfg) {
+    await fetch(`${SUPABASE_URL}/rest/v1/finance_settings?id=eq.1`, {
+      method: "PATCH",
+      headers,
+      body: JSON.stringify({ usd_goal: cfg.usd_goal, usd_saved: cfg.usd_saved, exchange_rate: cfg.exchange_rate }),
+    });
+  },
 };
