@@ -76,6 +76,86 @@ function BlockProgress({ block, checked }) {
     </div>
   );
 }
+
+function DayEditModal({ day, onClose }) {
+  const BG = "#0d0d14", CARD = "#13131f", BORDER = "#1e1e30";
+  const [checked, setChecked] = useState({});
+  const [saving, setSaving]   = useState(false);
+  const [saved, setSaved]     = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      const data = await db.getDay(day);
+      setChecked(data || {});
+      setLoading(false);
+    })();
+  }, [day]);
+
+  const toggle = async (id) => {
+    const next = { ...checked, [id]: !checked[id] };
+    setChecked(next);
+    setSaving(true);
+    await db.setDay(day, next);
+    setSaving(false);
+    setSaved(true);
+    setTimeout(() => setSaved(false), 1200);
+  };
+
+  const doneCount = HABITS.filter(h => checked[h.id]).length;
+  const pct = Math.round((doneCount / HABITS.length) * 100);
+  const [y, m, d] = day.split("-");
+  const dateLabel = `${parseInt(d)}/${parseInt(m)}/${y}`;
+
+  return (
+    <div style={{ position: "fixed", inset: 0, background: "#000000cc", zIndex: 100, display: "flex", alignItems: "flex-end", justifyContent: "center" }} onClick={onClose}>
+      <div style={{ background: "#12121e", borderRadius: "20px 20px 0 0", width: "100%", maxWidth: 480, maxHeight: "85vh", overflowY: "auto", padding: "20px 16px 40px" }} onClick={e => e.stopPropagation()}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+          <div>
+            <div style={{ fontSize: 9, color: "#7c6af7", fontWeight: 800, textTransform: "uppercase", letterSpacing: 2 }}>Editando día anterior</div>
+            <div style={{ fontSize: 18, fontWeight: 800 }}>{dateLabel}</div>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            {saving && <span style={{ fontSize: 10, color: "#555" }}>guardando...</span>}
+            {saved  && <span style={{ fontSize: 10, color: "#4caf75", fontWeight: 700 }}>✓</span>}
+            <button onClick={onClose} style={{ background: "#2a2a40", border: "none", color: "#aaa", borderRadius: 8, padding: "6px 12px", cursor: "pointer", fontSize: 13 }}>✕ Cerrar</button>
+          </div>
+        </div>
+        <div style={{ marginBottom: 12 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+            <span style={{ fontSize: 10, color: "#555" }}>{doneCount}/{HABITS.length}</span>
+            <span style={{ fontSize: 10, fontWeight: 800, color: pct === 100 ? "#4caf75" : "#7c6af7" }}>{pct}%</span>
+          </div>
+          <ProgressBar pct={pct} height={3} />
+        </div>
+        {loading ? (
+          <div style={{ textAlign: "center", color: "#444", padding: 30 }}>Cargando...</div>
+        ) : (
+          Object.entries(BLOCKS).map(([blockKey, blockData]) => (
+            <div key={blockKey} style={{ marginBottom: 16 }}>
+              <div style={{ fontSize: 11, fontWeight: 800, color: blockData.color, textTransform: "uppercase", letterSpacing: 1, marginBottom: 8, paddingBottom: 6, borderBottom: `1px solid ${blockData.color}30` }}>
+                {blockData.icon} {blockData.label}
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                {HABITS.filter(h => h.block === blockKey).map(h => {
+                  const done = !!checked[h.id];
+                  return (
+                    <div key={h.id} onClick={() => toggle(h.id)} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", background: done ? blockData.bg : CARD, border: `1px solid ${done ? blockData.color + "55" : BORDER}`, borderRadius: 10, cursor: "pointer" }}>
+                      <div style={{ width: 22, height: 22, borderRadius: "50%", border: `2px solid ${done ? blockData.color : "#333"}`, background: done ? blockData.color : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, color: "#fff", fontWeight: 800, fontSize: 11 }}>
+                        {done ? "✓" : ""}
+                      </div>
+                      <span style={{ fontSize: 13, fontWeight: 600, color: done ? "#666" : "#e8e8f0", textDecoration: done ? "line-through" : "none" }}>{h.icon} {h.label}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  );
+}
 export default function App() {
   const now = new Date();
   const BG = "#0d0d14", CARD = "#13131f", BORDER = "#1e1e30";
@@ -101,6 +181,7 @@ export default function App() {
   const [viewMonth,    setViewMonth]    = useState(now.getMonth());
   const [monthData,    setMonthData]    = useState({});
   const [monthLoading, setMonthLoading] = useState(false);
+  const [editingDay,   setEditingDay]   = useState(null);
 
   const streakRef = useRef(streak);
   streakRef.current = streak;
@@ -185,6 +266,12 @@ export default function App() {
     await db.setAppCount(next);
   };
 
+  const removeApplication = async () => {
+    const next = Math.max(0, appCount - 1);
+    setAppCount(next);
+    await db.setAppCount(next);
+  };
+
   const generateAiReport = async () => {
     setAiLoading(true);
     setAiReport("");
@@ -210,20 +297,36 @@ Aplicaciones enviadas hasta ahora: ${appCount}
 Racha actual: ${streak.count} días
 
 Datos de los últimos 7 días:
-${weekSummary || "Sin datos suficientes aún"}
+${weekSummary || "Sin datos suficientes aún — primer uso del sistema"}
 
-Respondé en español con:
-1. **Qué funcionó** (máximo 2 puntos concretos)
-2. **Qué falló o está en riesgo** (máximo 2 puntos concretos)
-3. **3 acciones concretas para esta semana** (específicas y ejecutables)
-4. **Un mensaje directo** de 1 sola línea que impacte
+Respondé en español con este formato exacto:
+**✅ Qué funcionó**
+- punto 1
+- punto 2
+
+**⚠️ Qué falló o está en riesgo**
+- punto 1
+- punto 2
+
+**🎯 3 acciones para esta semana**
+- acción concreta 1
+- acción concreta 2
+- acción concreta 3
+
+**💬 Mensaje directo**
+Una sola línea que impacte.
 
 Sé directo, específico y sin motivación genérica. Usá los datos reales.`;
 
     try {
       const response = await fetch("https://api.anthropic.com/v1/messages", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": "ANTHROPIC_API_KEY",
+          "anthropic-version": "2023-06-01",
+          "anthropic-dangerous-direct-browser-access": "true",
+        },
         body: JSON.stringify({
           model: "claude-sonnet-4-6",
           max_tokens: 1000,
@@ -270,6 +373,12 @@ Sé directo, específico y sin motivación genérica. Usá los datos reales.`;
     return { perfect, total, avg: total ? Math.round(sum / total) : 0 };
   };
 
+  const handleDayClick = (d) => {
+    if (!d) return;
+    const k = `${viewYear}-${String(viewMonth+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
+    setEditingDay(k);
+  };
+
   if (!ready) return (
     <div style={{ minHeight: "100vh", background: BG, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", color: "#555", fontFamily: "system-ui", gap: 12 }}>
       <div style={{ fontSize: 32 }}>⚡</div>
@@ -282,6 +391,19 @@ Sé directo, específico y sin motivación genérica. Usá los datos reales.`;
 
   return (
     <div style={{ minHeight: "100vh", background: BG, color: "#e8e8f0", fontFamily: "'Inter', system-ui, sans-serif", paddingBottom: 48 }}>
+
+      {editingDay && (
+        <DayEditModal day={editingDay} onClose={() => {
+          setEditingDay(null);
+          if (tab === "mes") {
+            db.getMonth(viewYear, viewMonth).then(data => {
+              const tk = todayKey();
+              if (tk.startsWith(`${viewYear}-${String(viewMonth+1).padStart(2,"0")}`)) data[tk] = checked;
+              setMonthData(data);
+            });
+          }
+        }} />
+      )}
 
       <div style={{ background: "linear-gradient(160deg, #12121e, #1a1a2e)", borderBottom: "1px solid " + BORDER, padding: "20px 16px 0" }}>
         <div style={{ maxWidth: 480, margin: "0 auto" }}>
@@ -386,9 +508,10 @@ Sé directo, específico y sin motivación genérica. Usá los datos reales.`;
                         <div style={{ fontSize: 11, color: "#4a9eff", fontWeight: 700 }}>📨 Aplicaciones enviadas</div>
                         <div style={{ fontSize: 9, color: "#555", marginTop: 2 }}>Total acumulado</div>
                       </div>
-                      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                        <div style={{ fontSize: 28, fontWeight: 900, color: "#4a9eff" }}>{appCount}</div>
-                        <button onClick={addApplication} style={{ background: "#4a9eff", border: "none", color: "#fff", borderRadius: 8, padding: "6px 12px", fontSize: 18, cursor: "pointer", fontWeight: 900 }}>+</button>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <button onClick={removeApplication} style={{ background: "#1e2e3e", border: "1px solid #4a9eff55", color: "#4a9eff", borderRadius: 8, padding: "6px 12px", fontSize: 18, cursor: "pointer", fontWeight: 900, lineHeight: 1 }}>−</button>
+                        <div style={{ fontSize: 28, fontWeight: 900, color: "#4a9eff", minWidth: 36, textAlign: "center" }}>{appCount}</div>
+                        <button onClick={addApplication} style={{ background: "#4a9eff", border: "none", color: "#fff", borderRadius: 8, padding: "6px 12px", fontSize: 18, cursor: "pointer", fontWeight: 900, lineHeight: 1 }}>+</button>
                       </div>
                     </div>
                   )}
@@ -486,6 +609,7 @@ Sé directo, específico y sin motivación genérica. Usá los datos reales.`;
                 ))}
               </div>
             )}
+            <div style={{ fontSize: 10, color: "#555", marginBottom: 8, textAlign: "center" }}>Tocá cualquier día para editarlo</div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 3, marginBottom: 4 }}>
               {["Do","Lu","Ma","Mi","Ju","Vi","Sa"].map(d => <div key={d} style={{ textAlign: "center", fontSize: 9, color: "#444", fontWeight: 700 }}>{d}</div>)}
             </div>
@@ -497,7 +621,7 @@ Sé directo, específico y sin motivación genérica. Usá los datos reales.`;
                   const bg  = !d ? "transparent" : p === null ? CARD : p === 100 ? "#1a3a20" : p >= 60 ? "#1e1b3a" : p >= 30 ? "#2a1a1a" : "#1a1a1a";
                   const dot = p === null ? null : p === 100 ? "#4caf75" : p >= 60 ? "#7c6af7" : p >= 30 ? "#f76a6a" : "#444";
                   return (
-                    <div key={i} style={{ aspectRatio: "1", background: bg, border: d ? `1px solid ${isToday ? "#7c6af7" : BORDER}` : "none", borderRadius: 8, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 2 }}>
+                    <div key={i} onClick={() => handleDayClick(d)} style={{ aspectRatio: "1", background: bg, border: d ? `1px solid ${isToday ? "#7c6af7" : BORDER}` : "none", borderRadius: 8, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 2, cursor: d ? "pointer" : "default" }}>
                       {d && <>
                         <div style={{ fontSize: 11, fontWeight: isToday ? 800 : 400, color: isToday ? "#7c6af7" : "#777" }}>{d}</div>
                         {dot && <div style={{ width: 5, height: 5, borderRadius: "50%", background: dot }} />}
