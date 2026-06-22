@@ -486,7 +486,7 @@ Una línea que impacte.`;
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-api-key": "ANTHROPIC_API_KEY",
+          "x-api-key": "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",
           "anthropic-version": "2023-06-01",
           "anthropic-dangerous-direct-browser-access": "true",
         },
