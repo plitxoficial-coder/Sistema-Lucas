@@ -8,34 +8,29 @@ const BLOCKS = {
 };
 
 const HABITS = [
-  { id: "wake",      time: "05:00", icon: "🌅", label: "Levantarse",            block: "cuerpo",   tip: "El 1% de ventaja empieza acá. Mientras otros duermen, vos construís." },
-  { id: "breakfast", time: "05:30", icon: "🍳", label: "Desayuno",              block: "cuerpo",   tip: "Proteínas en el desayuno = menos hambre y más energía durante todo el día." },
-  { id: "creatina",  time: "05:45", icon: "💊", label: "Creatina",              block: "cuerpo",   tip: "Consistencia > dosis perfecta. Todos los días, sin excepción." },
-  { id: "agua1",     time: "07:30", icon: "💧", label: "Tomar agua",            block: "cuerpo",   tip: "2–3 litros por día. La deshidratación leve baja la concentración un 20%." },
-  { id: "almuerzo",  time: "11:30", icon: "🍽️", label: "Almuerzo",             block: "cuerpo",   tip: "Priorizá proteínas y vegetales. El cuerpo lo hacés en la cocina." },
-  { id: "gym",       time: "15:00", icon: "🏋️", label: "Entrenar",             block: "cuerpo",   tip: "No entrena el que tiene ganas. Entrena el que tiene disciplina. Entrá igual." },
-  { id: "agua2",     time: "17:00", icon: "💧", label: "Agua (2do aviso)",      block: "cuerpo",   tip: "Hidratación post-entreno es clave para la recuperación muscular." },
-  { id: "merienda",  time: "17:30", icon: "🥪", label: "Merienda",              block: "cuerpo",   tip: "Momento ideal para carbohidratos post-entreno. Recargá glucógeno." },
-  { id: "skincare",  time: "19:00", icon: "🧴", label: "Skincare",              block: "cuerpo",   tip: "Presentación es parte del juego. Cuídate como si fueras tu propio brand." },
-  { id: "cena",      time: "20:00", icon: "🍽️", label: "Cena",                 block: "cuerpo",   tip: "Liviano y proteico. El cuerpo repara músculo mientras dormís." },
-  { id: "sleep",     time: "21:30", icon: "😴", label: "Prepararse para dormir",block: "cuerpo",   tip: "8 horas = hormona de crecimiento, recuperación, buenas decisiones. No es opcional." },
-  { id: "portugues", time: "08:00", icon: "🇧🇷", label: "Portugués (30 min)",  block: "mente",    tip: "30 minutos diarios = 180 horas al año. En enero llegás a Fortaleza con otro nivel." },
-  { id: "ingles",    time: "09:00", icon: "🇬🇧", label: "Inglés (30 min)",     block: "mente",    tip: "El inglés B2 te abre roles remotos internacionales. Cada sesión cuenta." },
-  { id: "lectura",   time: "21:00", icon: "📚", label: "Lectura",               block: "mente",    tip: "Los CEOs leen en promedio 52 libros al año. 20 páginas por día = 12 libros." },
-  { id: "job1",      time: "10:00", icon: "📨", label: "Aplicar a 3 roles",     block: "negocios", tip: "Volumen + calidad. 3 aplicaciones bien dirigidas valen más que 10 genéricas." },
-  { id: "zentrai",   time: "10:30", icon: "⚡", label: "1 hora Zentrai",        block: "negocios", tip: "Outreach, propuesta o seguimiento. Un contacto por día construye el primer cliente." },
-  { id: "review",    time: "21:15", icon: "📋", label: "Revisión del día",       block: "negocios", tip: "5 minutos de revisión diaria evitan semanas perdidas. ¿Qué moviste hoy?" },
+  { id: "wake",      icon: "🌅", label: "Levantarse temprano",  block: "cuerpo",   tip: "El día empieza antes que todos. Esa ventaja se acumula." },
+  { id: "creatina",  icon: "💊", label: "Creatina",             block: "cuerpo",   tip: "Consistencia > dosis perfecta. Todos los días, sin excepción." },
+  { id: "agua",      icon: "💧", label: "Agua (2L+)",           block: "cuerpo",   tip: "Deshidratación leve baja la concentración un 20%. Simple y gratis." },
+  { id: "gym",       icon: "🏋️", label: "Entrenar",            block: "cuerpo",   tip: "No entrena el que tiene ganas. Entrena el que tiene disciplina." },
+  { id: "skincare",  icon: "🧴", label: "Skincare",             block: "cuerpo",   tip: "Cuídate como si fueras tu propio brand." },
+  { id: "nutricion", icon: "🥗", label: "Nutrición cumplida",   block: "cuerpo",   tip: "¿Comiste bien hoy? Sé honesto. El cuerpo se construye en la cocina." },
+  { id: "sleep",     icon: "😴", label: "Dormir a tiempo",      block: "cuerpo",   tip: "8 horas = hormona de crecimiento, recuperación, buenas decisiones." },
+  { id: "idiomas",   icon: "🗣️", label: "Idiomas (45 min)",    block: "mente",    tip: "Alternás portugués e inglés. Dos idiomas, dos mercados, dos futuros." },
+  { id: "lectura",   icon: "📚", label: "Lectura",              block: "mente",    tip: "20 páginas por día = 12 libros por año. 15 minutos que cambian perspectivas." },
+  { id: "job",       icon: "💼", label: "Búsqueda laboral",     block: "negocios", tip: "Aplicar, investigar, mejorar CV, hacer networking. Algo concreto cada día." },
+  { id: "zentrai",   icon: "⚡", label: "1 hora Zentrai",       block: "negocios", tip: "Outreach, propuesta o seguimiento. El primer cliente empieza con un mensaje." },
+  { id: "review",    icon: "📋", label: "Revisión del día",     block: "negocios", tip: "5 minutos para cerrar el loop. ¿Qué moviste hoy? ¿Qué faltó?" },
 ];
 
 const GOALS = [
-  { id: "g1", icon: "💪", label: "Entrenamiento consistente", sub: "Sin saltear días",                              block: "cuerpo" },
-  { id: "g2", icon: "🥩", label: "Nutrición controlada",      sub: "Comer bien todos los días",                     block: "cuerpo" },
-  { id: "g3", icon: "🇧🇷", label: "Portugués fluido",         sub: "30 min diarios hasta enero",                    block: "mente" },
-  { id: "g4", icon: "🇬🇧", label: "Inglés B2",                sub: "Objetivo: roles remotos internacionales",       block: "mente" },
-  { id: "g5", icon: "📚", label: "Leer 12 libros",            sub: "20 páginas por día",                            block: "mente" },
-  { id: "g6", icon: "💼", label: "Rol remoto",                sub: "Process Automation Specialist — antes de enero",block: "negocios" },
-  { id: "g7", icon: "⚡", label: "Zentrai — primer cliente",  sub: "Servicio de automatización de operaciones",     block: "negocios" },
-  { id: "g8", icon: "🇧🇷", label: "Mudanza a Fortaleza",      sub: "Enero 2027",                                    block: "negocios" },
+  { id: "g1", icon: "💪", label: "Cuerpo optimizado",          sub: "Entrenamiento + nutrición consistentes",        block: "cuerpo" },
+  { id: "g2", icon: "😴", label: "Sueño y recuperación",       sub: "8 horas diarias sin negociar",                  block: "cuerpo" },
+  { id: "g3", icon: "🗣️", label: "Portugués fluido",           sub: "Funcional para vivir en Fortaleza — enero 2027",block: "mente" },
+  { id: "g4", icon: "🇬🇧", label: "Inglés B2",                 sub: "Roles remotos internacionales",                 block: "mente" },
+  { id: "g5", icon: "📚", label: "Leer 12 libros",             sub: "20 páginas por día",                            block: "mente" },
+  { id: "g6", icon: "💼", label: "Rol remoto",                 sub: "Process Automation Specialist — antes de enero",block: "negocios" },
+  { id: "g7", icon: "⚡", label: "Zentrai — primer cliente",   sub: "Servicio de automatización de operaciones",     block: "negocios" },
+  { id: "g8", icon: "🇧🇷", label: "Mudanza a Fortaleza",       sub: "Enero 2027 con USD 3.000+ de reserva",          block: "negocios" },
 ];
 
 const EXPENSE_CATS = ["Comida", "Transporte", "Salud", "Ropa", "Entretenimiento", "Servicios", "Otro"];
@@ -83,11 +78,11 @@ function BlockProgress({ block, checked }) {
 }
 
 function DayEditModal({ day, onClose }) {
-  const CARD = "#13131f", BORDER = "#ffffff08";
+  const CARD = "#13131f";
   const [checked, setChecked] = useState({});
-  const [saving, setSaving]   = useState(false);
-  const [saved,  setSaved]    = useState(false);
-  const [loading,setLoading]  = useState(true);
+  const [saving,  setSaving]  = useState(false);
+  const [saved,   setSaved]   = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     (async () => { const d = await db.getDay(day); setChecked(d || {}); setLoading(false); })();
@@ -252,12 +247,12 @@ function FinanceTab({ db }) {
 
       {/* USD del mes */}
       <div style={{ background: CARD, borderRadius: 12, padding: "12px 14px", marginBottom: 12 }}>
-        <div style={{ fontSize: 10, color: "#7c6af7", fontWeight: 700, marginBottom: 4 }}>Balance en USD (tipo de cambio: ${settings.exchange_rate.toLocaleString("es-AR")})</div>
+        <div style={{ fontSize: 10, color: "#7c6af7", fontWeight: 700, marginBottom: 4 }}>Balance en USD (TC: ${settings.exchange_rate.toLocaleString("es-AR")})</div>
         <div style={{ fontSize: 20, fontWeight: 900, color: usdBalance >= 0 ? "#4caf75" : "#f76a6a" }}>{fmtUSD(usdBalance)}</div>
         <div style={{ fontSize: 10, color: "#555", marginTop: 2 }}>Este mes podés sumar al ahorro</div>
       </div>
 
-      {/* Botón agregar + configuración */}
+      {/* Botones */}
       <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
         <button onClick={() => setShowForm(!showForm)} style={{ flex: 1, background: "#7c6af7", border: "none", color: "#fff", borderRadius: 10, padding: "12px", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
           {showForm ? "✕ Cancelar" : "+ Agregar movimiento"}
@@ -310,7 +305,7 @@ function FinanceTab({ db }) {
         </div>
       )}
 
-      {/* Lista de transacciones */}
+      {/* Lista */}
       <div style={{ fontSize: 10, color: "#555", textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>
         Movimientos de {MONTH_NAMES[now.getMonth()]}
       </div>
@@ -400,7 +395,7 @@ export default function App() {
   }, [tab, viewYear, viewMonth, ready]);
 
   useEffect(() => {
-    if (tab !== "ia") return;
+    if (tab !== "🤖") return;
     (async () => {
       const obj = {};
       for (let i = 0; i < 7; i++) {
@@ -461,8 +456,9 @@ export default function App() {
 - Lanzar Zentrai: servicio productizado de automatización de operaciones para empresas de transporte. El foco es conseguir el primer cliente pagando.
 - Conseguir un rol remoto como Process Automation Specialist antes de enero 2027
 - Mudarse a Fortaleza, Brasil en enero 2027 con USD 3.000+ de reserva
-- Entrenar consistentemente, comer bien, estudiar portugués e inglés 30 min diarios, leer
+- Entrenar consistentemente, comer bien, estudiar idiomas 45 min diarios, leer
 
+Sistema con 3 bloques: Cuerpo (7 hábitos), Mente (2 hábitos), Negocios (3 hábitos).
 Aplicaciones laborales enviadas: ${appCount} | Racha actual: ${streak.count} días | Semanas hasta Fortaleza: ${weeksLeft}
 
 Datos de los últimos 7 días:
@@ -557,7 +553,6 @@ Una línea que impacte.`;
         }} />
       )}
 
-      {/* HEADER */}
       <div style={{ background: "linear-gradient(160deg, #12121e, #1a1a2e)", padding: "20px 16px 0", borderBottom: "1px solid #ffffff08" }}>
         <div style={{ maxWidth: 480, margin: "0 auto" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
@@ -655,6 +650,7 @@ Una línea que impacte.`;
                     </div>
                     <span style={{ fontSize: 11, color: done === blockHabits.length ? "#4caf75" : "#555", fontWeight: 700 }}>{done}/{blockHabits.length}</span>
                   </div>
+
                   {blockKey === "negocios" && (
                     <div style={{ background: "#ffffff06", borderRadius: 12, padding: "12px 14px", marginBottom: 8, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                       <div>
@@ -668,6 +664,7 @@ Una línea que impacte.`;
                       </div>
                     </div>
                   )}
+
                   <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
                     {blockHabits.map(h => {
                       const done = !!checked[h.id];
@@ -683,9 +680,8 @@ Una línea que impacte.`;
                                 <span style={{ fontSize: 14 }}>{h.icon}</span>
                                 <span style={{ fontWeight: 700, fontSize: 13, textDecoration: done ? "line-through" : "none", color: done ? "#555" : "#e8e8f0" }}>{h.label}</span>
                               </div>
-                              <div style={{ fontSize: 9, color: "#444", marginTop: 2 }}>{h.time}hs</div>
                             </div>
-                            <button onClick={e => { e.stopPropagation(); setTip(open ? null : h.id); }} style={{ background: "none", border: "none", color: "#444", fontSize: 11, cursor: "pointer", padding: "0 4px" }}>
+                            <button onClick={e => { e.stopPropagation(); setTip(open ? null : h.id); }} style={{ background: "none", border: "none", color: "#333", fontSize: 11, cursor: "pointer", padding: "0 4px" }}>
                               {open ? "▲" : "▼"}
                             </button>
                           </div>
@@ -694,6 +690,7 @@ Una línea que impacte.`;
                       );
                     })}
                   </div>
+
                   <div style={{ marginTop: 8 }}>
                     {editingNote === blockKey ? (
                       <div style={{ display: "flex", gap: 8 }}>
@@ -704,7 +701,7 @@ Una línea que impacte.`;
                       </div>
                     ) : (
                       <button onClick={() => { setNoteInput(notes[blockKey] || ""); setEditingNote(blockKey); }}
-                        style={{ width: "100%", background: notes[blockKey] ? blockData.bg : "transparent", border: "none", borderRadius: 8, padding: "8px 12px", color: notes[blockKey] ? "#ccc" : "#333", fontSize: 11, cursor: "pointer", textAlign: "left" }}>
+                        style={{ width: "100%", background: "transparent", border: "none", borderRadius: 8, padding: "8px 12px", color: notes[blockKey] ? "#aaa" : "#333", fontSize: 11, cursor: "pointer", textAlign: "left" }}>
                         {notes[blockKey] ? `📝 ${notes[blockKey]}` : `+ Nota de ${blockData.label.toLowerCase()}`}
                       </button>
                     )}
